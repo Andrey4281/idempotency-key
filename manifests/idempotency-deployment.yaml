@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: idempotency-service
+  namespace: backend
+  labels:
+    app: idempotency
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7000
+      name: idempotency
+      targetPort: 8000
+  selector:
+    app: idempotency
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idempotency-deployment
+  namespace: backend
+  labels:
+    app: idempotency
+spec:
+  selector:
+    matchLabels:
+      app: idempotency
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: idempotency
+    spec:
+      containers:
+        - image: andrey4281/idempotency-key:0.0.2
+          name: idempotency
+          env:
+            - name: RDS_HOSTNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: otus-app-config
+                  key: rds-host-name
+            - name: RDS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: otus-app-config
+                  key: rds-port
+            - name: RDS_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: otus-app-config
+                  key: rds-db-name
+            - name: RDS_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: otus-app-config
+                  key: rds-user-name
+            - name: RDS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: otus-app-secrets
+                  key: psqluserpass
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: IfNotPresent

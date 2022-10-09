@@ -1,0 +1,172 @@
+{
+	"info": {
+		"_postman_id": "ed821187-e6fe-4c54-8a22-cded616c9620",
+		"name": "idempotency",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10312710"
+	},
+	"item": [
+		{
+			"name": "idempotency",
+			"item": [
+				{
+					"name": "createOrder",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (pm.environment.get(\"firstKey\") === null && pm.environment.get(\"firstKey\") === \"undefined\") {",
+									"    var uuid = require('uuid'); ",
+									"    var myUUID = uuid.v4();",
+									"    pm.environment.set(\"firstKey\", myUUID);",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"After first creating order attempt status is 200\", function () {",
+									"    pm.response.to.be.ok;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-Key",
+								"value": "{{firstKey}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderName\": \"test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://arch.homework/api/orders/create",
+							"protocol": "http",
+							"host": [
+								"arch",
+								"homework"
+							],
+							"path": [
+								"api",
+								"orders",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "creteOrderFailureRequest",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('After second creating order attempt status is 409', () => {",
+									"    pm.expect(pm.response.code).to.be.oneOf([409])",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-Key",
+								"value": "{{firstKey}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderName\": \"test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://arch.homework/api/orders/create",
+							"protocol": "http",
+							"host": [
+								"arch",
+								"homework"
+							],
+							"path": [
+								"api",
+								"orders",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetOrders",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"pm.test(\"After two requests we have only one order\", function () {",
+									"    pm.expect(jsonData.length).to.be.equal(1);",
+									"    pm.expect(jsonData[0].orderName).to.be.equal('test');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://arch.homework/api/orders",
+							"protocol": "http",
+							"host": [
+								"arch",
+								"homework"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

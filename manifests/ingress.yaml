@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: backend
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "32k"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "512m"
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - host: arch.homework
+      http:
+        paths:
+          - backend:
+              service:
+                name: idempotency-service
+                port:
+                  number: 7000
+            pathType: Prefix
+            path: /

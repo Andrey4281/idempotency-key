@@ -1,0 +1,9 @@
+global:
+  postgresql:
+    auth:
+      username: otus
+      database: idempotency
+      existingSecret: otus-app-secrets
+      secretKeys:
+        userPasswordKey: psqluserpass
+        adminPasswordKey: psqladminpass
